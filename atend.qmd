@@ -1,0 +1,113 @@
+---
+title: "Atendimentos"
+---
+
+-   Os atendimentos são subdivididos em 4 classificações:
+
+    -   Interconsulta
+
+    -   Primeira vez
+
+    -   Quimioterapia
+
+    -   Retorno
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(highcharter)
+library(echarts4r)
+library(shiny)
+
+a <- read.csv("ATD.csv", header = TRUE)
+a$Meses <- forcats::as_factor(a$Meses)
+
+
+```
+
+```{r}
+a |> dplyr::filter(Ano == 2022) |> 
+  dplyr::group_by(Classificacao) |> 
+  dplyr::summarise(Total = sum(Quantidade))
+```
+
+```{r}
+a |> filter(Ano == 2022) |> 
+  group_by(Classificacao) |> 
+  summarise(Total = sum(Quantidade)) |> 
+  mutate(Freq = round(Total/sum(Total)*100, 1)) |> 
+  e_charts(Classificacao, timeline = F,
+           playInterval = 3500
+  ) |>  
+  e_title(text = '')|>
+  e_pie(Freq, 
+        #radius = c("15%", "80%"),
+        #label = list (text = "Porcentagem"),
+        name = "Frequência relativa (em %) ", 
+        #symbol = "none",
+        legend = TRUE,
+        showBackground = TRUE,
+        #roseType = 'area',
+        #roseType = 'radius',
+        percentPrecision = 1,
+        #cursor = 'pointer',
+        animationTypeUpdate = 'transition',
+        animationType = 'scale',
+        animationEasing='elasticOut',
+        legendHoverLink = TRUE
+  ) |> 
+  e_labels(show = TRUE,
+           formatter = "{b} \n {d}%",
+           position = "outside",
+           fontFamily = 'sans-serif',
+           fontWeight = 'bold') |>
+  e_tooltip(trigger = "item",
+            formatter = htmlwidgets::JS("
+                                        function(params){
+                                        return(   '<br />Proporção: ' +  params.percent)  +'%' }  ")
+  )|>
+  # e_timeline_opts(
+  #   axis_type = "category",
+  #   playInterval = 1500,
+  #   top = 5,
+  #   right = 50,
+  #   left = 200
+  # ) |> 
+  e_datazoom()
+```
+
+```{r}
+a |> filter(Ano == 2022) |> 
+  group_by(Meses) |> 
+  summarise(Total = sum(Quantidade)) |> 
+  mutate(Freq = round(Total / sum(Total)*100, 1)) |> 
+  e_charts(Meses, timeline = F) %>% 
+  e_bar(Total, name = "Quantidade",
+        y_index =1,
+        label = list(show = TRUE, 
+                     position = 'inside',
+                     align = 'center',
+                     verticalAlign = 'bottom',
+                     formatter = htmlwidgets::JS("
+                                function(params){
+                                return(
+                                params.value[1])
+                                }
+                                ")
+        )
+  )%>% 
+  e_line(Freq, smooth = TRUE, name ='Frequência',
+         label = list(show = TRUE, fontWeight = 'bold',
+                      formatter = htmlwidgets::JS("
+                                function(params){
+                                return(
+                                params.value[1] +'%')
+                                }
+                                ")),
+         y_index = 0) %>% 
+  e_tooltip(trigger = c("item", "axis"), style = c("decimal", "percent"), 
+            #formatter = e_tooltip_pointer_formatter("currency"),
+            axisPointer = list(type = "cross")
+  ) %>% 
+  e_theme('essos') %>% 
+  e_format_y_axis(index = 0, suffix = "%")
+```

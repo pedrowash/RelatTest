@@ -1,0 +1,12 @@
+---
+title: "Setor de Ginecologia e Mama (SGM)"
+subtitle: "Hospital de Câncer Araújo Jorge<br>Estatísticas de Agendamentos: Ambulatório (SUS)"
+---
+
+This is a Quarto website.
+
+To learn more about Quarto websites visit <https://quarto.org/docs/websites>.
+
+```{r}
+1 + 1
+```
